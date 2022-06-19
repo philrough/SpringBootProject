@@ -23,8 +23,89 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 class DemoApplicationTests {
 
 	@Test
-	void contextLoads() {
+	void getPersonRequestReturnsNoPeopleOnInitialStartup() throws IOException, InterruptedException {
+		// Arrange
+		String url = "http://localhost:8080/api/v1/person";
+
+		// Act
+		HttpResponse<String> response = getRequest(url);
+
+		// Assert
+		assertEquals("[]",
+				((HttpResponse<String>) response).body());
 	}
 
-	
+	@Test
+	void postPersonRequestAddsPerson() throws IOException, InterruptedException {
+		// Arrange
+		String url = "http://localhost:8080/api/v1/person";
+
+		var payload = new HashMap<String, String>() {
+			{
+				put("name", "John Doe");
+			}
+		};
+
+		// Act
+		HttpResponse<String> response = postRequest(url, payload);
+
+		// Assert
+		assertEquals(200, response.statusCode());
+
+	}
+
+	@Test
+	void getPersonRequestReturnsPerson() throws IOException, InterruptedException {
+		// Arrange
+		String url = "http://localhost:8080/api/v1/person";
+
+		// Act
+		HttpResponse<String> response = getRequest(url);
+
+		// Assert
+		assert ((response).body().contains("John Doe"));
+	}
+
+	// Helper methods
+	HttpResponse<String> getRequest(String url) throws IOException, InterruptedException {
+
+		HttpClient client = HttpClient.newHttpClient();
+		HttpRequest request = HttpRequest.newBuilder()
+				.uri(URI.create(url))
+				.build();
+
+		HttpResponse<String> response = client.send(request,
+				HttpResponse.BodyHandlers.ofString());
+
+		System.out.println(response.body());
+
+		return response;
+	}
+
+	HttpResponse<String> postRequest(String url, HashMap<String, String> payload)
+			throws IOException, InterruptedException {
+
+		var payload2 = new HashMap<String, String>() {
+			{
+				put("name", "John Doe");
+			}
+		};
+
+		var objectMapper = new ObjectMapper();
+		String requestBody = objectMapper
+				.writeValueAsString(payload2);
+
+		HttpClient client = HttpClient.newHttpClient();
+		HttpRequest request = HttpRequest.newBuilder()
+				.uri(URI.create(url))
+				.POST(HttpRequest.BodyPublishers.ofString(requestBody))
+				.build();
+
+		HttpResponse<String> response = client.send(request,
+				HttpResponse.BodyHandlers.ofString());
+
+		System.out.println(response.body());
+		return response;
+	}
+
 }
